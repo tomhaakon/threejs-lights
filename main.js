@@ -90,7 +90,18 @@ function main() {
       //
     }
   }
-
+  class DegRadHelper {
+    constructor(obj, prop) {
+      this.obj = obj
+      this.prop = prop
+    }
+    get value() {
+      return THREE.MathUtils.radToDeg(this.obj[this.prop])
+    }
+    set value(v) {
+      this.obj[this.prop] = THREE.MathUtils.degToRad(v)
+    }
+  }
   function makeXYZGUI(gui, vector3, name, onChangeFn) {
     const folder = gui.addFolder(name)
     folder.add(vector3, 'x', -10, 10).onChange(onChangeFn)
@@ -101,11 +112,11 @@ function main() {
   {
     const color = 0xffffff
     const intensity = 150
-    const light = new THREE.PointLight(color, intensity)
+    const light = new THREE.SpotLight(color, intensity)
     light.position.set(0, 10, 0)
     scene.add(light)
 
-    const helper = new THREE.PointLightHelper(light)
+    const helper = new THREE.SpotLightHelper(light)
     scene.add(helper)
 
     function updateLight() {
@@ -114,10 +125,16 @@ function main() {
 
     const gui = new GUI()
     gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color')
-    gui.add(light, 'intensity', 0, 5, 0.01)
+    gui.add(light, 'intensity', 0, 250, 1)
     gui.add(light, 'distance', 0, 40).onChange(updateLight)
+    gui
+      .add(new DegRadHelper(light, 'angle'), 'value', 0, 90)
+      .name('angle')
+      .onChange(updateLight)
+    gui.add(light, 'penumbra', 0, 1, 0.01)
 
     makeXYZGUI(gui, light.position, 'position', updateLight)
+    makeXYZGUI(gui, light.target.position, 'target', updateLight)
   }
   function resizeRendererToDisplaySize(renderer) {
     //
