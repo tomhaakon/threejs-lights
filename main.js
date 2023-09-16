@@ -90,21 +90,35 @@ function main() {
       //
     }
   }
+
+  function makeXYZGUI(gui, vector3, name, onChangeFn) {
+    const folder = gui.addFolder(name)
+    folder.add(vector3, 'x', -10, 10).onChange(onChangeFn)
+    folder.add(vector3, 'y', 0, 10).onChange(onChangeFn)
+    folder.add(vector3, 'z', -10, 10).onChange(onChangeFn)
+    folder.open()
+  }
   {
-    const skyColor = 0xb1e1ff // light blue
-    const groundColor = 0xb97a20 // brownish orange
-    const intensity = 1
-    const light = new THREE.HemisphereLight(skyColor, groundColor, intensity)
+    const color = 0xffffff
+    const intensity = 150
+    const light = new THREE.PointLight(color, intensity)
+    light.position.set(0, 10, 0)
     scene.add(light)
 
-    const gui = new GUI()
-    gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('skyColor')
-    gui
-      .addColor(new ColorGUIHelper(light, 'groundColor'), 'value')
-      .name('groundColor')
-    gui.add(light, 'intensity', 0, 5, 0.01)
-  }
+    const helper = new THREE.PointLightHelper(light)
+    scene.add(helper)
 
+    function updateLight() {
+      helper.update()
+    }
+
+    const gui = new GUI()
+    gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color')
+    gui.add(light, 'intensity', 0, 5, 0.01)
+    gui.add(light, 'distance', 0, 40).onChange(updateLight)
+
+    makeXYZGUI(gui, light.position, 'position', updateLight)
+  }
   function resizeRendererToDisplaySize(renderer) {
     //
     const canvas = renderer.domElement
