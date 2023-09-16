@@ -1,4 +1,7 @@
 import * as THREE from 'three'
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js'
+import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js'
+
 import { OrbitControls } from 'three/addons/controls/OrbitControls'
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js'
 import { sendError } from './errorHandler.js'
@@ -11,6 +14,7 @@ function main() {
 
   const canvas = document.querySelector('#c')
   const renderer = new THREE.WebGLRenderer({ antialias: true, canvas })
+  RectAreaLightUniformsLib.init()
 
   const fov = 45
   const aspect = 2
@@ -39,7 +43,7 @@ function main() {
     texture.repeat.set(repeats, repeats)
 
     const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize)
-    const planeMat = new THREE.MeshPhongMaterial({
+    const planeMat = new THREE.MeshStandardMaterial({
       map: texture,
       side: THREE.DoubleSide,
     })
@@ -51,7 +55,7 @@ function main() {
   {
     const cubeSize = 4
     const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize)
-    const cubeMat = new THREE.MeshPhongMaterial({ color: '#8AC' })
+    const cubeMat = new THREE.MeshStandardMaterial({ color: '#8AC' })
     const mesh = new THREE.Mesh(cubeGeo, cubeMat)
     mesh.position.set(cubeSize + 1, cubeSize / 2, 0)
     scene.add(mesh)
@@ -65,7 +69,7 @@ function main() {
       spehereWidthDivisiions,
       sphereHeightDivisions
     )
-    const sphereMat = new THREE.MeshPhongMaterial({ color: '#CA8' })
+    const sphereMat = new THREE.MeshStandardMaterial({ color: '#CA8' })
     const mesh = new THREE.Mesh(sphereGeo, sphereMat)
     mesh.position.set(-sphereRadius - 1, sphereRadius + 2, 0)
     scene.add(mesh)
@@ -111,30 +115,33 @@ function main() {
   }
   {
     const color = 0xffffff
-    const intensity = 150
-    const light = new THREE.SpotLight(color, intensity)
+    const intensity = 5
+    const width = 12
+    const height = 4
+    const light = new THREE.RectAreaLight(color, intensity, width, height)
     light.position.set(0, 10, 0)
+    light.rotation.x = THREE.MathUtils.degToRad(-90)
     scene.add(light)
 
-    const helper = new THREE.SpotLightHelper(light)
-    scene.add(helper)
-
-    function updateLight() {
-      helper.update()
-    }
+    const helper = new RectAreaLightHelper(light)
+    light.add(helper)
 
     const gui = new GUI()
     gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color')
-    gui.add(light, 'intensity', 0, 250, 1)
-    gui.add(light, 'distance', 0, 40).onChange(updateLight)
+    gui.add(light, 'intensity', 0, 10, 0.01)
+    gui.add(light, 'width', 0, 20)
+    gui.add(light, 'height', 0, 20)
     gui
-      .add(new DegRadHelper(light, 'angle'), 'value', 0, 90)
-      .name('angle')
-      .onChange(updateLight)
-    gui.add(light, 'penumbra', 0, 1, 0.01)
+      .add(new DegRadHelper(light.rotation, 'x'), 'value', -180, 180)
+      .name('x rotation')
+    gui
+      .add(new DegRadHelper(light.rotation, 'y'), 'value', -180, 180)
+      .name('y rotation')
+    gui
+      .add(new DegRadHelper(light.rotation, 'z'), 'value', -180, 180)
+      .name('z rotation')
 
-    makeXYZGUI(gui, light.position, 'position', updateLight)
-    makeXYZGUI(gui, light.target.position, 'target', updateLight)
+    makeXYZGUI(gui, light.position, 'position')
   }
   function resizeRendererToDisplaySize(renderer) {
     //
